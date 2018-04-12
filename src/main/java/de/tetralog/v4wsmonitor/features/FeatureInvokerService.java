@@ -1,17 +1,21 @@
 package de.tetralog.v4wsmonitor.features;
 
 import cucumber.api.cli.Main;
+import cucumber.api.java.ObjectFactory;
 import cucumber.runtime.ClassFinder;
+import cucumber.runtime.Env;
 import cucumber.runtime.Runtime;
 import cucumber.runtime.RuntimeOptions;
 import cucumber.runtime.io.MultiLoader;
 import cucumber.runtime.io.ResourceLoader;
 import cucumber.runtime.io.ResourceLoaderClassFinder;
 import cucumber.runtime.java.JavaBackend;
+import cucumber.runtime.java.ObjectFactoryLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.datetime.DateFormatter;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ClassUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -67,10 +71,12 @@ public class FeatureInvokerService {
     private void runtimeRun(List<String> args) throws IOException {
 //        args.add(reporterClass + ":" + reportPath + reportName);
         RuntimeOptions runtimeOptions = new RuntimeOptions(args);
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
         ResourceLoader resourceLoader = new MultiLoader(classLoader);
+        SpringBootResourceLoaderClassFinder springBootResourceLoaderClassFinder = new SpringBootResourceLoaderClassFinder(resourceLoader, classLoader);
+        ObjectFactory objectFactory = ObjectFactoryLoader.loadObjectFactory(springBootResourceLoaderClassFinder, Env.INSTANCE.get(ObjectFactory.class.getName()));
 //        ClassFinder classFinder = new ResourceLoaderClassFinder(resourceLoader, classLoader);
-        JavaBackend backend = new JavaBackend(resourceLoader);
+        JavaBackend backend = new JavaBackend(objectFactory, springBootResourceLoaderClassFinder);
         Runtime runtime = new Runtime(resourceLoader,
                 classLoader,
                 Collections.singletonList(backend),
