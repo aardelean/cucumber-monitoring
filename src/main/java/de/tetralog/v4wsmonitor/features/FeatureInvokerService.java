@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.datetime.DateFormatter;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -47,28 +48,34 @@ public class FeatureInvokerService {
     private void executeTests(List<String> features, String reportName) {
         try {
             List<String> args = features.stream()
-                    .map(f -> "classpath:" + f + ".feature")
+                    .map(f -> "src/main/resources/" + f + ".feature")
                     .collect(Collectors.toList());
             args.add("-g");
             args.add("de.tetralog.v4wsmonitor.test");
             args.add("-p");
-            args.add("html:" +reportPath + reportName);
-            Main.run(args.toArray(new String[args.size()]), Thread.currentThread().getContextClassLoader());
-//            args.add(reporterClass + ":" + reportPath + reportName);
-//            RuntimeOptions runtimeOptions = new RuntimeOptions(args);
-//            ClassLoader classLoader = Thread.currentThread().getContextClassLoader().getParent();
-//            ResourceLoader resourceLoader = new MultiLoader(classLoader);
-//            ClassFinder classFinder = new ResourceLoaderClassFinder(resourceLoader, classLoader);
-//            JavaBackend backend = new JavaBackend(resourceLoader);
-//            Runtime runtime = new Runtime(resourceLoader,
-//                    ClassLoader.getSystemClassLoader(),
-//                    Collections.singletonList(backend),
-//                    runtimeOptions,
-//                    null);
-//            runtime.run();
+            args.add("html:" + reportPath + reportName);
+            runtimeRun(args);
+//            mainRun(args);
         } catch (Throwable throwable) {
             throwable.printStackTrace();
             throw new RuntimeException("Could not execute tests: ", throwable);
         }
+    }
+    private void mainRun(List<String> args) throws IOException {
+        Main.run(args.toArray(new String[args.size()]), Thread.currentThread().getContextClassLoader());
+    }
+    private void runtimeRun(List<String> args) throws IOException {
+//        args.add(reporterClass + ":" + reportPath + reportName);
+        RuntimeOptions runtimeOptions = new RuntimeOptions(args);
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        ResourceLoader resourceLoader = new MultiLoader(classLoader);
+//        ClassFinder classFinder = new ResourceLoaderClassFinder(resourceLoader, classLoader);
+        JavaBackend backend = new JavaBackend(resourceLoader);
+        Runtime runtime = new Runtime(resourceLoader,
+                classLoader,
+                Collections.singletonList(backend),
+                runtimeOptions,
+                null);
+        runtime.run();
     }
 }
