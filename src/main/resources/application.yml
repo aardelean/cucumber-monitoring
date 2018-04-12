@@ -1,0 +1,13 @@
+host: http://localhost
+server:
+  port: 7070
+schedulers:
+  cheanUpJob:
+    reportsMaxLifeTime: 345_600_000
+cucumber:
+  reporter:
+    class:  com.cucumber.listener.ExtentCucumberFormatter
+    path: cucumber-reports/
+    report-name-link-time-pattern: __
+  healthCheck:
+    features: f1,f2
