@@ -1,24 +1,27 @@
 package de.tetralog.v4wsmonitor;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.format.datetime.DateFormatter;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import io.undertow.Handlers;
+import io.undertow.Undertow;
+import io.undertow.server.handlers.resource.DefaultResourceSupplier;
+import io.undertow.server.handlers.resource.FileResourceManager;
+import io.undertow.server.handlers.resource.ResourceHandler;
 
-@SpringBootApplication
-@EnableScheduling
+import java.io.File;
+
 public class Application {
 
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
-
-	@Bean
-	public DateFormatter dateFormatter() {
-		DateFormatter df = new DateFormatter();
-		df.setIso(DateTimeFormat.ISO.DATE_TIME);
-		return df;
+	public static void main(final String[] args) {
+		Undertow server = Undertow.builder()
+				.addHttpListener(7070, "localhost")
+				.setHandler(Handlers.path()
+                        .addExactPath("fire", new FireFeatureHandler(args[0]))
+                        .addPrefixPath("reports", new ResourceHandler(
+                                new DefaultResourceSupplier(
+                                        new FileResourceManager(new File(args[0])))
+                        ))
+                        .addPrefixPath("version",
+                                exchange -> exchange.getResponseSender().send("1.0"))
+                ).build();
+		server.start();
 	}
 }
