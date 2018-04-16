@@ -34,7 +34,7 @@ public class FireFeatureHandler implements HttpHandler {
         }
         String reportName = exchange.getQueryParameters().get(REPORT_PARAM_NAME).getFirst();
         ForkJoinPool.commonPool().execute(() -> executeTests(features, reportName));
-        exchange.getResponseSender().send("Feature Test Started");
+        exchange.getResponseSender().send("Report can be seen at: " + exchange.getHostAndPort() + "/reports/" + reportName);
     }
 
     private void executeTests(List<String> features, String reportName) {
@@ -47,7 +47,6 @@ public class FireFeatureHandler implements HttpHandler {
             args.add("-p");
             args.add("com.cucumber.listener.ExtentCucumberFormatter:" + reportPath + reportName);
             mainRun(args);
-            System.out.println("Report at: " + reportPath + reportName);
         } catch (Throwable throwable) {
             throwable.printStackTrace();
             throw new RuntimeException("Could not execute tests: ", throwable);
